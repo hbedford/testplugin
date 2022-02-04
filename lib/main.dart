@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:chromecast/chromecast.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
-import 'package:flutter/material.dart';
 import 'timer.dart';
 
 void main() {
@@ -54,7 +54,7 @@ class _CastSampleState extends State<CastSample> {
           ),
         ],
       ),
-      body: Center(child: _handleState()),
+      body: BumbleBeeRemoteVideo() /* Center(child: _handleState()) */,
     );
   }
 
@@ -169,7 +169,7 @@ class _CastSampleState extends State<CastSample> {
   Future<void> _onSessionStarted() async {
     setState(() => _state = AppState.connected);
     await _controller.loadMedia(
-      'http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
     );
   }
 
@@ -219,3 +219,60 @@ class _RoundIconButton extends StatelessWidget {
 }
 
 enum AppState { idle, connected, mediaLoaded, error }
+
+class BumbleBeeRemoteVideo extends StatefulWidget {
+  @override
+  BumbleBeeRemoteVideoState createState() => BumbleBeeRemoteVideoState();
+}
+
+class BumbleBeeRemoteVideoState extends State<BumbleBeeRemoteVideo> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(
+      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    );
+
+    _controller.addListener(() {
+      setState(() {});
+    });
+    _controller.setLooping(true);
+    _controller.initialize();
+    _controller.play();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          Container(padding: const EdgeInsets.only(top: 20.0)),
+          const Text('With remote mp4'),
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: <Widget>[
+                  VideoPlayer(_controller),
+                  ClosedCaption(text: _controller.value.caption.text),
+                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
